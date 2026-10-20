@@ -141,10 +141,16 @@ class MemuraiTests(unittest.TestCase):
             "$ErrorActionPreference = 'Stop'; "
             f". {quote_ps(PROJECT / 'scripts/setup-windows.ps1')}; "
             "function Get-MemuraiCli { return $null }; "
+            "function Get-Command { param($Name) "
+            "if ($Name -ne 'winget') { throw \"Unexpected command lookup: $Name\" }; "
+            "[pscustomobject]@{ Source = 'winget.exe' } }; "
             "function Invoke-Checked { throw 'Unexpected installer call' }; "
         )
-        result = subprocess.run([PS, "-NoProfile", "-Command", preamble + script],
-                                text=True, capture_output=True)
+        # Installer tests need a writable log directory, including under pwsh on Linux.
+        with tempfile.TemporaryDirectory(prefix="impact memurai tests ") as directory:
+            result = subprocess.run([PS, "-NoProfile", "-Command", preamble + script],
+                                    env={**os.environ, "LOCALAPPDATA": directory},
+                                    text=True, capture_output=True)
         if ok:
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         else:
