@@ -23,6 +23,9 @@ public class Product {
     @Column(nullable = false)
     private Integer stock;
 
+    @Column(name = "discount_percentage", precision = 5, scale = 2)
+    private BigDecimal discountPercentage;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
@@ -41,6 +44,8 @@ public class Product {
     public void setPrice(BigDecimal price) { this.price = price; }
     public Integer getStock() { return stock; }
     public void setStock(Integer stock) { this.stock = stock; }
+    public BigDecimal getDiscountPercentage() { return discountPercentage; }
+    public void setDiscountPercentage(BigDecimal discountPercentage) { this.discountPercentage = discountPercentage; }
     public Category getCategory() { return category; }
     public void setCategory(Category category) { this.category = category; }
     public LocalDateTime getCreatedAt() { return createdAt; }

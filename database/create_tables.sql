@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS products (
     description TEXT,
     price NUMERIC(10,2) NOT NULL CHECK (price > 0),
     stock INTEGER NOT NULL CHECK (stock >= 0),
+    discount_percentage NUMERIC(5,2) CHECK (discount_percentage BETWEEN 0 AND 100),
     category_id BIGINT REFERENCES categories(id),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -19,4 +20,11 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash VARCHAR(100) NOT NULL,
     role VARCHAR(20) NOT NULL CHECK (role IN ('USER', 'ADMIN')),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    token VARCHAR(36) NOT NULL UNIQUE,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    revoked BOOLEAN NOT NULL DEFAULT FALSE
 );

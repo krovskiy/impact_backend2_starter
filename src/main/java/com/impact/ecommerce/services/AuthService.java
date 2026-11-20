@@ -3,6 +3,7 @@ package com.impact.ecommerce.services;
 import com.impact.ecommerce.dtos.auth.*;
 import com.impact.ecommerce.entities.*;
 import com.impact.ecommerce.repositories.UserRepository;
+import com.impact.ecommerce.repositories.RefreshTokenRepository;
 import com.impact.ecommerce.security.JwtService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -11,17 +12,21 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
+import java.time.Instant;
+import java.util.UUID;
 
 @Service
 public class AuthService {
     private final UserRepository users;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final RefreshTokenRepository refreshTokens;
 
-    public AuthService(UserRepository users, PasswordEncoder passwordEncoder, JwtService jwtService) {
+    public AuthService(UserRepository users, PasswordEncoder passwordEncoder, JwtService jwtService, RefreshTokenRepository refreshTokens) {
         this.users = users;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.refreshTokens = refreshTokens;
     }
 
     @Transactional
@@ -39,7 +44,7 @@ public class AuthService {
         return response(user); // 201 plus a token: required by the existing frontend's register form.
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public AuthResponse login(LoginRequest request) {
         User user = users.findByEmail(request.email().trim().toLowerCase(Locale.ROOT))
                 .orElseThrow(this::badCredentials);
@@ -67,7 +72,27 @@ public class AuthService {
     }
 
     private AuthResponse response(User user) {
-        return new AuthResponse(jwtService.generateToken(user), user.getId(), user.getEmail(), user.getRole().name());
+        RefreshToken refresh = new RefreshToken(UUID.randomUUID().toString(), user, Instant.now().plusSeconds(30L * 24 * 60 * 60));
+        refreshTokens.save(refresh);
+        return new AuthResponse(jwtService.generateToken(user), user.getId(), user.getEmail(), user.getRole().name(), refresh.getToken());
+    }
+
+    // Lesson 11: lock the row so concurrent requests cannot both rotate the same token.
+    @Transactional
+    public AuthResponse refresh(String token) {
+        RefreshToken existing = refreshTokens.findLockedByToken(token).orElseThrow(this::invalidRefresh);
+        if (existing.isRevoked() || !existing.getExpiresAt().isAfter(Instant.now())) throw invalidRefresh();
+        existing.revoke();
+        return response(existing.getUser());
+    }
+
+    @Transactional
+    public void logout(String token) {
+        refreshTokens.findLockedByToken(token).ifPresent(RefreshToken::revoke);
+    }
+
+    private ResponseStatusException invalidRefresh() {
+        return new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or expired refresh token");
     }
 
     private ResponseStatusException badCredentials() {

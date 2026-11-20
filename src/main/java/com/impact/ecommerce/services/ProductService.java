@@ -77,6 +77,7 @@ public class ProductService {
         product.setDescription(request.description());
         product.setPrice(request.price());
         product.setStock(request.stock());
+        product.setDiscountPercentage(request.discountPercentage());
         product.setCategory(request.categoryId() == null ? null : categories.findById(request.categoryId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found")));
         return product;

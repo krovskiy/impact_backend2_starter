@@ -10,6 +10,10 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    ResponseEntity<Map<String, String>> invalidParameter(Exception error) {
+        return ResponseEntity.badRequest().body(Map.of("error", "Invalid parameter", "message", "Invalid parameter"));
+    }
     @ExceptionHandler({org.springframework.data.redis.RedisConnectionFailureException.class,
             org.springframework.dao.QueryTimeoutException.class})
     ResponseEntity<Map<String, String>> cacheUnavailable(Exception error) {
@@ -19,13 +23,14 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(ResponseStatusException.class)
     ResponseEntity<Map<String, String>> status(ResponseStatusException error) {
-        return ResponseEntity.status(error.getStatusCode()).body(Map.of("error",
-                error.getReason() == null ? "Request failed" : error.getReason()));
+        String message = error.getReason() == null ? "Request failed" : error.getReason();
+        return ResponseEntity.status(error.getStatusCode()).body(Map.of("error", message, "message", message));
     }
 
     @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class})
     ResponseEntity<Map<String, String>> validation(Exception error) {
-        return ResponseEntity.badRequest().body(Map.of("error", "Check email, password and product fields"));
+        return ResponseEntity.badRequest().body(Map.of("error", "Check email, password and product fields",
+                "message", "Check email, password and product fields"));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

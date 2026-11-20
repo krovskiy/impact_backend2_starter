@@ -46,4 +46,13 @@ public class AuthController {
     @ApiResponse(responseCode = "500", description = "Unexpected server error")
     @PostMapping("/login")
     public AuthResponse login(@Valid @RequestBody LoginRequest request) { return auth.login(request); }
+
+    @PostMapping("/refresh")
+    public AuthResponse refresh(@Valid @RequestBody RefreshRequest request) { return auth.refresh(request.refreshToken()); }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@Valid @RequestBody RefreshRequest request) {
+        auth.logout(request.refreshToken());
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -4,7 +4,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigDecimal;
 
 public record ProductResponse(Long id, String name, String description, BigDecimal price,
-                              Integer stock, Long categoryId, String categoryName) {
+                              Integer stock, Long categoryId, String categoryName,
+                              BigDecimal finalPrice, BigDecimal discountPercentage) {
+    public ProductResponse(Long id, String name, String description, BigDecimal price,
+                           Integer stock, Long categoryId, String categoryName) {
+        this(id, name, description, price, stock, categoryId, categoryName, price, null);
+    }
     // The existing frontend calls this field "category"; keep both names for the lesson DTO.
     @JsonProperty("category")
     public String category() { return categoryName; }
