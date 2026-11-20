@@ -84,3 +84,9 @@ Verifică dacă a apărut o versiune nouă cu `java scripts/CheckFrontend.java` 
 ## Redis opțional
 
 Cu Redis disponibil local, pornește cu `mvn spring-boot:run "-Dspring-boot.run.arguments=--spring.cache.type=redis"`. Poți porni Redis cu `docker compose -f database/compose.yaml up -d --wait`; instalarea nativă este disponibilă prin `.\setup.cmd redis` sau `bash setup.sh redis` pe sistemele suportate. Fără Redis, folosește pornirea normală. Cache-ul local nu are TTL; configurația Redis are TTL de 60 de secunde.
+
+## Verificări
+
+Pentru compilare, teste și generarea JAR-ului, rulează `mvn --batch-mode --no-transfer-progress verify`. Testele scripturilor de instalare necesită și Python 3: `python -m unittest discover -s scripts/tests -v`.
+
+GitHub Actions rulează verificările pe Linux și Windows la fiecare push și pull request și păstrează rapoartele testelor Java. Dependabot verifică săptămânal dependențele Maven, acțiunile GitHub și imaginea Redis din Docker Compose.
