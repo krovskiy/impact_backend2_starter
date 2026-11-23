@@ -11,9 +11,9 @@ import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.cache.CacheManager;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -30,8 +30,8 @@ class Lesson3Tests {
     @Autowired ProductService service;
     @Autowired CacheManager caches;
     @Autowired ObjectMapper mapper;
-    @SpyBean ProductRepository products;
-    @SpyBean CategoryRepository categories;
+    @MockitoSpyBean ProductRepository products;
+    @MockitoSpyBean CategoryRepository categories;
     private Long categoryId;
     private Long productId;
 
@@ -73,7 +73,7 @@ class Lesson3Tests {
     @Test
     void redisConfigurationHasSixtySecondTtlAndRoundTripsDtos() {
         var config = CacheConfig.configuration(mapper, ProductResponse.class);
-        assertEquals(Duration.ofSeconds(60), config.getTtl());
+        assertEquals(Duration.ofSeconds(60), config.getTtlFunction().getTimeToLive("key", null));
         var original = List.of(new ProductResponse(1L, "Book", "Notes",
                 new BigDecimal("10.00"), 3, 2L, "Books"));
         var pair = config.getValueSerializationPair();

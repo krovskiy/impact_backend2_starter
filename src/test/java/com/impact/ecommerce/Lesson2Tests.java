@@ -9,10 +9,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -91,19 +90,19 @@ class Lesson2Tests {
     }
 
     @Test
-    @WithMockUser(roles = "USER")
     void userCannotUseAdminOrProductWrites() throws Exception {
-        mvc.perform(get("/api/admin/test")).andExpect(status().isForbidden());
-        mvc.perform(delete("/api/products/1")).andExpect(status().isForbidden());
-        mvc.perform(get("/api/test/protected")).andExpect(status().isOk());
+        String authorization = "Bearer " + login("user@impact.md", "user123");
+        mvc.perform(get("/api/admin/test").header("Authorization", authorization)).andExpect(status().isForbidden());
+        mvc.perform(delete("/api/products/1").header("Authorization", authorization)).andExpect(status().isForbidden());
+        mvc.perform(get("/api/test/protected").header("Authorization", authorization)).andExpect(status().isOk());
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void adminAuthorizationAndProductValidationArePrepared() throws Exception {
-        mvc.perform(get("/api/admin/test")).andExpect(status().isOk())
+        String authorization = "Bearer " + login("admin@impact.md", "admin123");
+        mvc.perform(get("/api/admin/test").header("Authorization", authorization)).andExpect(status().isOk())
                 .andExpect(content().string("You are an admin"));
-        mvc.perform(post("/api/products").contentType("application/json")
+        mvc.perform(post("/api/products").header("Authorization", authorization).contentType("application/json")
                 .content("{\"name\":\"\",\"price\":-2,\"stock\":-1}")).andExpect(status().isBadRequest());
     }
 
